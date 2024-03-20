@@ -9,7 +9,7 @@ namespace zhk
         {
             try
             {
-                var pageDom = this.GetPageDom("https://www.zhk.co.il/category/news/karmiel-news/");
+                var pageDom = this.GetPageDom("https://www.zhk.co.il/category/news/");
                 var article = new ZhkGrabber(pageDom).GrabArticleFirstOrDefault();
 
                 this.RaiseUpdateEvent(article);
