@@ -29,8 +29,8 @@ namespace selfdrive.Models
         {
             var message = new SendingMessage()
             {
-                Title = this.Title,
-                Message = this.Entry,
+                Title = this.SiteName,
+                Message = this.Title + "\n\n" + this.Entry,
                 Attach = new Uri(this.ImgSrc),
                 Click = new Uri(this.Link)
             };
