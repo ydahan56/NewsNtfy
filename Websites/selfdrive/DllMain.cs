@@ -1,11 +1,5 @@
-﻿using HtmlAgilityPack;
-using Sdk.Articles;
-using Sdk.Base;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Sdk.Articles;
+using Sdk.Contracts;
 
 namespace selfdrive
 {
@@ -15,8 +9,8 @@ namespace selfdrive
         {
             try
             {
-                var pageDom = this.GetPageDom("https://selfdrivenews.com/");
-                var article = new SdnGrabber(pageDom).GrabArticleFirstOrDefault();
+                var viewDOM = this.GetPageDom("https://selfdrivenews.com/");
+                var article = new DllParser(viewDOM).FirstOrDefault();
 
                 this.RaiseUpdateEvent(article);
             }
@@ -24,7 +18,7 @@ namespace selfdrive
             {
                 this.RaiseUpdateEvent(new ExceptionArticle()
                 {
-                    OptionalInfo = ex.ToString()
+                    ErrorMessage = ex.ToString()
                 });
             }
         }

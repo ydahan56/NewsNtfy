@@ -8,10 +8,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="DotNetEnv" Version="2.5.0" />
+    <PackageReference Include="DotNetEnv" Version="3.1.0" />
     <PackageReference Include="FluentScheduler" Version="5.5.1" />
-    <PackageReference Include="Magick.NET-Q16-x64" Version="13.3.0" />
-    <PackageReference Include="RestSharp" Version="110.2.0" />
+    <PackageReference Include="Magick.NET-Q16-x64" Version="13.10.0" />
+    <PackageReference Include="ntfy" Version="0.5.0" />
+    <PackageReference Include="RestSharp" Version="111.4.1" />
   </ItemGroup>
 
   <ItemGroup>

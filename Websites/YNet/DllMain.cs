@@ -1,9 +1,5 @@
-﻿using Hanssens.Net;
-using HtmlAgilityPack;
-using Sdk.Articles;
-using Sdk.Base;
-using Sdk.ImageShack;
-using YNet.Models;
+﻿using Sdk.Articles;
+using Sdk.Contracts;
 
 namespace YNet
 {
@@ -13,23 +9,25 @@ namespace YNet
         {
             try
             {
-                var pageDom = this.GetPageDom("https://www.ynet.co.il/home/0,7340,L-8,00.html");
-                var article = new YNetGrabber(pageDom).GrabArticleFirstOrDefault();
+                var viewDOM = this.GetPageDom("https://www.ynet.co.il/home/0,7340,L-8,00.html");
+                var article = new DllParser(viewDOM).FirstOrDefault();
 
                 this.RaiseUpdateEvent(article);
             }
             catch (Exception ex)
             {
-                this.RaiseUpdateEvent(new ExceptionArticle()
-                {
-                    OptionalInfo = ex.ToString()
-                });
+                this.RaiseUpdateEvent(
+                    new ExceptionArticle()
+                    {
+                        ErrorMessage = ex.ToString()
+                    }
+                );
             }
         }
 
         public override void Initialize(string workingDirectory)
         {
-           // throw new NotImplementedException();
+            // throw new NotImplementedException();
         }
     }
 }

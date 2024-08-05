@@ -1,4 +1,5 @@
 ﻿using Hanssens.Net;
+using ntfy.Requests;
 using Sdk.Articles;
 
 namespace Walla_.Models
@@ -11,9 +12,30 @@ namespace Walla_.Models
             this.SiteName = "Walla! News";
         }
 
-        public override IArticle GetCached(ILocalStorage storage)
+        public override bool IsArticlePublished(ILocalStorage storage)
         {
-            return storage.Get<WallaArticle>(this.Key);
+            if (storage.Exists(this.Key))
+            {
+                var cachedArticle = storage.Get<WallaArticle>(this.Key);
+
+                return (this.LinkHashCode == cachedArticle.LinkHashCode);
+            }
+
+            // we assume entry does not exist in the cache
+            return false;
+        }
+
+        public override SendingMessage ToMessage()
+        {
+            var message = new SendingMessage()
+            {
+                Title = this.Title,
+                Message = this.Entry,
+                Attach = new Uri(this.ImgSrc),
+                Click = new Uri(this.Link)
+            };
+
+            return message;
         }
     }
 }

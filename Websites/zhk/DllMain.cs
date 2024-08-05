@@ -1,5 +1,5 @@
 ﻿using Sdk.Articles;
-using Sdk.Base;
+using Sdk.Contracts;
 
 namespace zhk
 {
@@ -9,23 +9,25 @@ namespace zhk
         {
             try
             {
-                var pageDom = this.GetPageDom("https://www.zhk.co.il/category/news/");
-                var article = new ZhkGrabber(pageDom).GrabArticleFirstOrDefault();
+                var viewDOM = this.GetPageDom("https://www.zhk.co.il/category/news/");
+                var article = new DllParser(viewDOM).FirstOrDefault();
 
                 this.RaiseUpdateEvent(article);
             }
             catch (Exception ex)
             {
-                this.RaiseUpdateEvent(new ExceptionArticle()
-                {
-                    OptionalInfo = ex.ToString()
-                });
+                this.RaiseUpdateEvent(
+                    new ExceptionArticle()
+                    {
+                        ErrorMessage = ex.ToString()
+                    }
+                );
             }
         }
 
         public override void Initialize(string workingDirectory)
         {
-           // throw new NotImplementedException();
+            // throw new NotImplementedException();
         }
     }
 }

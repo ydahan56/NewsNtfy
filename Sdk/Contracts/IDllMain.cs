@@ -4,7 +4,7 @@ using Nito.AsyncEx;
 using ScrapySharp.Network;
 using Sdk.Articles;
 
-namespace Sdk.Base
+namespace Sdk.Contracts
 {
     public abstract class IDllMain : IJob
     {
@@ -13,12 +13,12 @@ namespace Sdk.Base
 
         protected IDllMain()
         {
-            this._browser = new ScrapingBrowser();
+            _browser = new ScrapingBrowser();
         }
 
         protected string GetPageHtmlContent(string pageUrl)
         {
-            return AsyncContext.Run(async () => await this._browser.AjaxDownloadStringAsync(new Uri(pageUrl)));
+            return AsyncContext.Run(async () => await _browser.AjaxDownloadStringAsync(new Uri(pageUrl)));
         }
 
         public abstract void Execute();
@@ -27,17 +27,17 @@ namespace Sdk.Base
 
         public void SetUpdateCallback(Action<IArticle> updateCallback)
         {
-            this._updateCallback = updateCallback;
+            _updateCallback = updateCallback;
         }
 
         protected void RaiseUpdateEvent(IArticle article)
         {
-            this._updateCallback(article);
+            _updateCallback(article);
         }
 
         protected HtmlDocument GetPageDom(string pageUrl)
         {
-            var content = this.GetPageHtmlContent(pageUrl);
+            var content = GetPageHtmlContent(pageUrl);
             var document = new HtmlDocument();
 
             document.LoadHtml(content);

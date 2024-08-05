@@ -9,9 +9,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sdk", "Sdk\Sdk.csproj", "{0
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Websites", "Websites", "{D2C031F5-E16D-4CB8-B8AA-AA57BE5663A0}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "YNet", "Websites\YNet\YNet.csproj", "{00987497-728A-4CD5-9B47-D5E619AC6117}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ynet", "Websites\YNet\ynet.csproj", "{00987497-728A-4CD5-9B47-D5E619AC6117}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Walla!", "Websites\Walla!\Walla!.csproj", "{AF590A0C-BD77-4943-84F4-2899361FC39A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "walla", "Websites\Walla!\walla.csproj", "{AF590A0C-BD77-4943-84F4-2899361FC39A}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "zhk", "Websites\zhk\zhk.csproj", "{723D7B80-881B-4731-8200-2AF42CC50CEA}"
 EndProject

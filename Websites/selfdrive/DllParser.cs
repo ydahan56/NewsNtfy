@@ -1,27 +1,21 @@
 ﻿using HtmlAgilityPack;
 using Sdk.Articles;
-using Sdk.Base;
+using Sdk.Contracts;
 using selfdrive.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Web;
 
 namespace selfdrive
 {
-    public class SdnGrabber : IGrabber
+    public class DllParser : IArticleParser
     {
         private readonly HtmlDocument _document;
         private const string root_xpath = "//main[@id='main']//article";
 
-        public SdnGrabber(HtmlDocument document)
+        public DllParser(HtmlDocument document)
         {
             this._document = document;
         }
 
-        public IArticle GrabArticleFirstOrDefault()
+        public IArticle FirstOrDefault()
         {
             try
             {

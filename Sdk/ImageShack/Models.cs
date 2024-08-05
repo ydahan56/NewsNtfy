@@ -2,7 +2,6 @@
 
 namespace Sdk.ImageShack
 {
-    // Root myDeserializedClass = JsonConvert.DeserializeObject<Root>(myJsonResponse);
     public class ExifInfo
     {
         public string exiforientation { get; set; }
@@ -54,7 +53,7 @@ namespace Sdk.ImageShack
         public int height { get; set; }
     }
 
-    public class ImageShackApiResult
+    public class ImageShackResult
     {
         public string status { get; set; }
         public int version { get; set; }

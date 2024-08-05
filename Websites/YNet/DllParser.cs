@@ -1,20 +1,20 @@
 ﻿using HtmlAgilityPack;
 using Sdk.Articles;
-using Sdk.Base;
+using Sdk.Contracts;
 using YNet.Models;
 
 namespace YNet
 {
-    public class YNetGrabber : IGrabber
+    public class DllParser : IArticleParser
     {
         private readonly HtmlDocument _document;
 
-        public YNetGrabber(HtmlDocument document)
+        public DllParser(HtmlDocument document)
         {
             this._document = document;
         }
 
-        public IArticle GrabArticleFirstOrDefault()
+        public IArticle FirstOrDefault()
         {
             try
             {

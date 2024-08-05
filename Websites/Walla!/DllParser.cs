@@ -1,22 +1,20 @@
-﻿using Hanssens.Net;
-using HtmlAgilityPack;
+﻿using HtmlAgilityPack;
 using Sdk.Articles;
-using Sdk.Base;
-using System.Web;
+using Sdk.Contracts;
 using Walla_.Models;
 
 namespace Walla_
 {
-    public class WallaGrabber : IGrabber
+    public class DllParser : IArticleParser
     {
         private readonly HtmlDocument _document;
 
-        public WallaGrabber(HtmlDocument document)
+        public DllParser(HtmlDocument document)
         {
             this._document = document;
         }
 
-        public IArticle GrabArticleFirstOrDefault()
+        public IArticle FirstOrDefault()
         {
             try
             {

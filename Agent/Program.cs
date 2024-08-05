@@ -1,37 +1,41 @@
-﻿using DotNetEnv;
+﻿using Agent.Jobs;
+using DotNetEnv;
 using FluentScheduler;
 using Hanssens.Net;
-using NewsNotify.Registries;
-using NewsNotify.Services;
+using ntfy;
 using Sdk.Articles;
-using Sdk.Base;
+using Sdk.Contracts;
 using System.Diagnostics;
 using System.Reflection;
+using System.Text;
 
 Console.Title = "NewsNtfy";
 
 Env.Load();
 
-var ntfy = new NtfySh();
+// must be here, prevent error "unassigned variable"
+Mutex _invokeMutex = new Mutex(false);
+
+var ntfy = new Client("https://ntfy.sh");
 var cache = new LocalStorage();
 
-object _update_mutex = new object();
+var interval_minutes = Env.GetInt("interval_minutes");
+var ntfy_topic = Env.GetString("ntfy_topic");
 
-var minutes = Env.GetInt("minutes");
+var Registries = GetMonitoringJobs();
 
-var Registries = GetJobs()
-    .Select(x => new SiteRegistry(x, minutes))
-    .ToArray();
-
-
-JobManager.Initialize(Registries);
+JobManager.Initialize([.. Registries]);
 
 var instance = Process.GetCurrentProcess();
 
-Console.WriteLine($"{Registries.Count()} Registries initialized, Press any key to exit... PID is {instance.Id}");
+var sb = new StringBuilder();
+sb.AppendLine($"{Registries.Count} websites initialized, PID {instance.Id}");
+sb.AppendLine("Press any key to exit...");
+
+Console.WriteLine(sb.ToString());
 Console.ReadKey();
 
-List<IJob?> GetJobs()
+List<MonitorJob> GetMonitoringJobs()
 {
 #if DEBUG
     var path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "Websites");
@@ -40,71 +44,70 @@ List<IJob?> GetJobs()
 #endif
     var modules = Directory.EnumerateFiles(path, "*.Lib.dll", SearchOption.AllDirectories).ToList();
 
-    var items = modules.Select(path =>
-    {
-        var assembly = Assembly.LoadFrom(path);
-        var typeName = assembly.ExportedTypes
-            .Single(x => x.Name.Equals("DllMain")).FullName;
-        var instance = (IDllMain)assembly.CreateInstance(typeName);
+    var items = modules
+        .Select(path =>
+        {
+            Console.WriteLine(path);
+            var assembly = Assembly.LoadFrom(path);
+            var typeName = assembly.ExportedTypes.Single(x => x.FullName.Contains("DllMain"));
+            var instance = (IDllMain)assembly.CreateInstance(typeName.FullName);
 
-        // init dll
-        instance.Initialize(Path.GetDirectoryName(path));
+            // init dll
+            instance.Initialize(Path.GetDirectoryName(path));
 
-        // set update callback
-        instance.SetUpdateCallback(UpdateCallback);
+            // set update callback
+            instance.SetUpdateCallback(UpdateCallback);
 
-        // return job for manager
-        return (IJob)instance;
-    }).ToList();
+            // return transformed monitor job
+            return new MonitorJob(instance, interval_minutes);
+        })
+        .ToList();
 
     return items!;
 }
 
 
-
 void UpdateCallback(IArticle article)
 {
-    lock (_update_mutex)
+    _invokeMutex.WaitOne();
+
+    try
     {
         if (article is ExceptionArticle)
         {
             // print the exception
-            Console.WriteLine(article.OptionalInfo);
+            Console.WriteLine(article.ErrorMessage);
+
+            // exit and wait for next execution
             return;
         }
 
-        var hashCode = article.LinkHashCode;
-
-        if (cache.Exists(article.Key))
+        // check if article already published
+        if (article.IsArticlePublished(cache))
         {
-            var cachedArticle = article.GetCached(cache);
-            var cachedHashCode = cachedArticle.LinkHashCode;
+            // print to console
+            Console.WriteLine($"Article for {article.SiteName} already Published.");
 
-            if (hashCode == cachedHashCode)
-            {
-                // same article, we exit
-                Console.WriteLine($"{hashCode} same article for {article.Key}, exit.");
-                return;
-            }
+            // return and wait for next execution
+            return;
         }
 
-        Console.WriteLine($"{hashCode} new article for {article.Key}, publish.");
+        // prepare data
+        var message = article.ToMessage();
 
-        // create the text to display
-        var text = $"{article.Title}\n\n{article.Entry}";
+        // execute publish
+        var push = ntfy.Publish(ntfy_topic, message);
+        push.Wait();
 
-        // if a headline is available
-        if (!string.IsNullOrWhiteSpace(article.Headline))
-        {
-            // insert headline at the beginning
-            text.Insert(0, article.Headline + "\n");
-        }
-
-        // publish update to user's
-        ntfy.notifyArticleChanged(article.SiteName, text, article.ImgSrc, article.Link);
+        // print to console
+        Console.WriteLine($"Article update for {article.SiteName} Published..");
 
         // update article in local storage
         cache.Store(article.Key, article);
         cache.Persist();
+    }
+    finally
+    {
+        _invokeMutex.ReleaseMutex();
     }
 }

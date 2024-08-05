@@ -1,10 +1,6 @@
 ﻿using Hanssens.Net;
+using ntfy.Requests;
 using Sdk.Articles;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace selfdrive.Models
 {
@@ -15,9 +11,31 @@ namespace selfdrive.Models
             this.Key = "SDN";
             this.SiteName = "SelfDriveNews";
         }
-        public override IArticle GetCached(ILocalStorage storage)
+
+        public override bool IsArticlePublished(ILocalStorage storage)
         {
-            return storage.Get<SdnArticle>(this.Key);
+            if (storage.Exists(this.Key))
+            {
+                var cachedArticle = storage.Get<SdnArticle>(this.Key);
+
+                return (this.LinkHashCode == cachedArticle.LinkHashCode);
+            }
+
+            // we assume entry does not exist in the cache
+            return false;
+        }
+
+        public override SendingMessage ToMessage()
+        {
+            var message = new SendingMessage()
+            {
+                Title = this.Title,
+                Message = this.Entry,
+                Attach = new Uri(this.ImgSrc),
+                Click = new Uri(this.Link)
+            };
+
+            return message;
         }
     }
 }

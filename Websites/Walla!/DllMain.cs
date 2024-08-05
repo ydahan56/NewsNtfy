@@ -1,21 +1,46 @@
 ﻿using Hanssens.Net;
-using HtmlAgilityPack;
 using ImageMagick;
 using Nito.AsyncEx;
 using Sdk.Articles;
-using Sdk.Base;
+using Sdk.Contracts;
 using Sdk.ImageShack;
-using Sdk.ImgBB;
-using System.Reflection;
 using Walla_.Models;
 
 namespace Walla_
 {
     public class DllMain : IDllMain
     {
-        private string workingDirectory;
-        private LocalStorage cache;
-        private ImageShackClient imageShackClient;
+        private string? workingDirectory;
+        private LocalStorage? cache;
+        private ImageShackClient? imageShackClient;
+
+        public override void Execute()
+        {
+            try
+            {
+                var viewDOM = this.GetPageDom("https://www.walla.co.il/");
+                var article = new DllParser(viewDOM).FirstOrDefault();
+
+                // to prevent duplicate in imageshack's profile
+                var isSame = this.IsCacheArticleImgHashEquals(article, out ImgHash cachedImgSrc);
+
+                if (!isSame)
+                {
+                    this.UpdateArticleImgSrc(ref article, cachedImgSrc);
+                }
+
+                this.RaiseUpdateEvent(article);
+            }
+            catch (Exception ex)
+            {
+                this.RaiseUpdateEvent(
+                    new ExceptionArticle()
+                    {
+                        ErrorMessage = ex.ToString()
+                    }
+                );
+            }
+        }
 
         public override void Initialize(string workingDirectory)
         {
@@ -29,33 +54,7 @@ namespace Walla_
             this.imageShackClient = new ImageShackClient();
         }
 
-        public override void Execute()
-        {
-            try
-            {
-                var pageDom = this.GetPageDom("https://www.walla.co.il/");
-                var article = new WallaGrabber(pageDom).GrabArticleFirstOrDefault();
-
-                // to prevent duplicate in imageshack's profile
-                var isSame = this.IsCachedImgHashSameByArticle(article, out ImgHash cachedImgSrc);
-
-                if (!isSame)
-                {
-                    this.UpdateArticleImgSrc(ref article, cachedImgSrc);
-                }
-
-                this.RaiseUpdateEvent(article);
-            }
-            catch (Exception ex)
-            {
-                this.RaiseUpdateEvent(new ExceptionArticle()
-                {
-                    OptionalInfo = ex.ToString()
-                });
-            }
-        }
-
-        private bool IsCachedImgHashSameByArticle(IArticle article, out ImgHash cachedImgSrc)
+        private bool IsCacheArticleImgHashEquals(IArticle article, out ImgHash cachedImgSrc)
         {
             // init with default value
             cachedImgSrc = new ImgHash();
@@ -76,20 +75,20 @@ namespace Walla_
             var fileName = Path.GetFileNameWithoutExtension(Path.GetTempFileName()) + ".jpg";
             var filePath = Path.Combine(this.workingDirectory, fileName);
 
-            this.DownloadImageAsJpeg(article.ImgSrc, filePath);
+            this.WriteImageToDisk(article.ImgSrc, filePath);
             var PutRes = this.imageShackClient.UploadImageByFile(fileName, filePath);
 
             // delete afterwards
             System.IO.File.Delete(filePath);
 
             // store new imgsrc to cache
-            this.StoreCachedImgSrc(cachedImgSrc, article.ImgSrcHashCode, PutRes.links.image_link);
+            this.CommitImgSrcCache(cachedImgSrc, article.ImgSrcHashCode, PutRes.links.image_link);
 
             // update img link in the article
             article.ImgSrc = PutRes.links.image_link;
         }
 
-        private void StoreCachedImgSrc(ImgHash cachedImgSrc, int hash, string imagelink)
+        private void CommitImgSrcCache(ImgHash cachedImgSrc, int hash, string imagelink)
         {
             // update the cached imgsrc content
             cachedImgSrc.hash = hash;
@@ -100,18 +99,20 @@ namespace Walla_
             this.cache.Persist();
         }
 
-        private void DownloadImageAsJpeg(string imageUrl, string filePath)
+        private void WriteImageToDisk(string imageUrl, string filePath)
         {
             using HttpClient client = new HttpClient();
 
-            var bytes = AsyncContext.Run(async () => await client.GetByteArrayAsync(imageUrl));
+            var bytes = AsyncContext.Run(
+                async () => await client.GetByteArrayAsync(imageUrl)
+            );
 
-            using MagickImage image = new MagickImage(bytes)
+            using var magick = new MagickImage(bytes)
             {
                 Format = MagickFormat.Jpeg
             };
 
-            image.Write(filePath);
+            magick.Write(filePath);
         }
     }
 }

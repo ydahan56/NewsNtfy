@@ -1,27 +1,22 @@
 ﻿using HtmlAgilityPack;
 using Sdk.Articles;
-using Sdk.Base;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Sdk.Contracts;
 using System.Web;
 using zhk.Models;
 
 namespace zhk
 {
-    public class ZhkGrabber : IGrabber
+    public class DllParser : IArticleParser
     {
         private readonly HtmlDocument _document;
         private const string root_xpath = "//div[@id='main-content']//article";
 
-        public ZhkGrabber(HtmlDocument document)
+        public DllParser(HtmlDocument document)
         {
             this._document = document;
         }
 
-        public IArticle GrabArticleFirstOrDefault()
+        public IArticle FirstOrDefault()
         {
             try
             {
